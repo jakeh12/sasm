@@ -18,6 +18,7 @@ typedef struct
 }
 label_t;
 
+
 int find_label_addr(char* name, label_t* labels, int label_count)
 {
     int i;
@@ -29,12 +30,16 @@ int find_label_addr(char* name, label_t* labels, int label_count)
     return -1;
 }
 
+
 int main(int argc, const char * argv[]) {
     
-    char* path = "/Users/jhladik/Documents/Development/sasm/program.sasm";
+    if (argc < 1) {
+        printf("ERROR: MISSING SOURCE CODE PATH\n");
+        exit(EXIT_FAILURE);
+    }
     
     // open file
-    FILE* fp = fopen(path, "r");
+    FILE* fp = fopen(argv[1], "r");
     if (!fp) exit(EXIT_FAILURE);
     
     // figure out the size of the file
@@ -49,6 +54,12 @@ int main(int argc, const char * argv[]) {
     
     // null terminate the file
     file[fsize] = '\0';
+    
+    printf("----------------------------------------\n");
+    printf("source file\n");
+    printf("----------------------------------------\n");
+    printf("%s\n", file);
+    
     
     line_t* lines = (line_t*) calloc(65535, sizeof(line_t));
     int line_count = 0;
@@ -133,7 +144,6 @@ int main(int argc, const char * argv[]) {
         // end process line
         // ********************************
         
-        
         // update line pointer
         skip_line: line = next_line ? next_line + 1 : NULL;
     }
@@ -213,15 +223,53 @@ int main(int argc, const char * argv[]) {
     // ********************************
     
     // ********************************
+    // start print labels
+    // ********************************
+    printf("----------------------------------------\n");
+    printf("labels\n");
+    printf("----------------------------------------\n");
+    for (i = 0; i < label_count; i++)
+    {
+        printf("%04x\t%s\n", labels[i].addr, labels[i].name);
+    }
+    // ********************************
+    // end print labels
+    // ********************************
+    
+    // ********************************
+    // start print listing
+    // ********************************
+    printf("----------------------------------------\n");
+    printf("directives\n");
+    printf("----------------------------------------\n");
+    for (i = 0; i < line_count; i++)
+    {
+        int j = 0;
+        printf("%04x\t%s", lines[i].addr, lines[i].dir);
+        while (lines[i].args[j] && j < 3)
+        {
+            printf("\t%s", lines[i].args[j]);
+            j++;
+        }
+        printf("\n");
+    }
+    // ********************************
+    // end print listing
+    // ********************************
+    
+    // ********************************
     // start print assembled program
     // ********************************
+    printf("----------------------------------------\n");
+    printf("assembled program\n");
+    printf("----------------------------------------\n");
     for (i = 0; i < pc; i++)
     {
         if (i % 16 == 0)
         {
             if (i != 0)
                 printf("\n");
-            printf("%04x: ", i);
+            printf("%04x\t", i);
         }
         printf("%02x ", program[i]);
     }
@@ -230,6 +278,16 @@ int main(int argc, const char * argv[]) {
     // end print assembled program
     // ********************************
     
+    // ********************************
+    // start write binary file
+    // ********************************
+    fp = fopen("out.bin", "wb");
+    if (!fp) exit(EXIT_FAILURE);
+    fwrite(program, pc, sizeof(uint8_t), fp);
+    fclose(fp);
+    // ********************************
+    // end write binary file
+    // ********************************
     
     free(labels);
     free(lines);
