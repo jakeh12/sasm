@@ -81,6 +81,7 @@ int main(int argc, const char * argv[]) {
         // skip empty or comment lines
         char* token;
         if (line[0] == '\0' || (token = strtok(line, " ,\t\n\v\f")) == NULL)
+            // same as continue if did not have to do line chopping
             goto skip_line;
         
         // check if the token is a label
@@ -95,6 +96,7 @@ int main(int argc, const char * argv[]) {
             // continue to next line
             token = strtok(NULL, " ,\t\n\v\f");
             if (!token)
+                // same as continue if did not have to do line chopping
                 goto skip_line;
         }
         
@@ -189,6 +191,7 @@ int main(int argc, const char * argv[]) {
             }
             else
             {
+                // no target specified, choose next pc
                 program[pc] = (pc + 2) & 0xFF;
                 pc++;
                 program[pc] = ((pc + 2) >> 8) & 0xFF;
@@ -198,6 +201,7 @@ int main(int argc, const char * argv[]) {
         else if (strcmp(lines[i].dir, "db") == 0)
         {
             // parse constants
+            
             uint8_t c = (uint8_t) strtol(lines[i].args[0], NULL, 10);
             program[pc] = c;
             pc++;
@@ -208,11 +212,22 @@ int main(int argc, const char * argv[]) {
     // end assemble program
     // ********************************
     
-    // print program
+    // ********************************
+    // start print assembled program
+    // ********************************
     for (i = 0; i < pc; i++)
     {
-        printf("0x%04x:\t0x%02x\n", i, program[i]);
+        if (i % 16 == 0)
+        {
+            printf("\n %04x: ", i);
+        }
+        printf("%02x ", program[i]);
     }
+    printf("\n");
+    // ********************************
+    // end print assembled program
+    // ********************************
+    
     
     free(labels);
     free(lines);
