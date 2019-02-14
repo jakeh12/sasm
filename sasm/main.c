@@ -219,7 +219,9 @@ int main(int argc, const char * argv[]) {
     {
         if (i % 16 == 0)
         {
-            printf("\n %04x: ", i);
+            if (i != 0)
+                printf("\n");
+            printf("%04x: ", i);
         }
         printf("%02x ", program[i]);
     }
