@@ -137,22 +137,48 @@ int main(int argc, const char * argv[]) {
         if (strcmp(lines[i].dir, "sble") == 0)
         {
             printf("0x%04x\t%s\t", lines[i].addr, lines[i].dir);
-            int j;
-            for (j = 0; j < lines[i].args_count; j++)
+            
+            int addr = find_label_addr(lines[i].args[0], labels, label_count);
+            if (addr == -1)
             {
-                int addr = find_label_addr(lines[i].args[j], labels, label_count);
+                printf("ERROR: LABEL DOES NOT EXIST\n");
+                exit(EXIT_FAILURE);
+            }
+            program[pc] = addr & 0xFF;
+            pc++;
+            program[pc] = (addr >> 8) & 0xFF;
+            pc++;
+            
+            addr = find_label_addr(lines[i].args[1], labels, label_count);
+            if (addr == -1)
+            {
+                printf("ERROR: LABEL DOES NOT EXIST\n");
+                exit(EXIT_FAILURE);
+            }
+            program[pc] = addr & 0xFF;
+            pc++;
+            program[pc] = (addr >> 8) & 0xFF;
+            pc++;
+            
+            if (lines[i].args_count == 2)
+            {
+                program[pc] = (pc + 2) & 0xFF;
+                pc++;
+                program[pc] = ((pc + 2) >> 8) & 0xFF;
+                pc++;
+            }
+            else
+            {
+                addr = find_label_addr(lines[i].args[2], labels, label_count);
                 if (addr == -1)
                 {
                     printf("ERROR: LABEL DOES NOT EXIST\n");
                     exit(EXIT_FAILURE);
                 }
-                
                 program[pc] = addr & 0xFF;
                 pc++;
                 program[pc] = (addr >> 8) & 0xFF;
                 pc++;
-                
-                printf("%s\t", lines[i].args[j]);
             }
             printf("\n");
         }
