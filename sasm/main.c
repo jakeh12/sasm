@@ -30,6 +30,29 @@ int find_label_addr(char* name, label_t* labels, int label_count)
     return -1;
 }
 
+int parse_number(char* str)
+{
+    int base = 10;
+    if (str[0] == '$')
+    {
+        // hexadecimal number
+        str++;
+        base = 16;
+    }
+    else if (str[0] == '%')
+    {
+        // binary number
+        str++;
+        base = 2;
+    }
+    else
+    {
+        // decimal number
+        base = 10;
+    }
+    return (int) strtol(str, NULL, base);
+}
+
 
 int main(int argc, const char * argv[]) {
     
@@ -123,6 +146,13 @@ int main(int argc, const char * argv[]) {
         {
             lc += 1;
         }
+        else if (strcmp(token, "org") == 0)
+        {
+            // TODO: need to parse right away to figure out the new lc
+            token = strtok(NULL, " ,\t\n\v\f");
+            lc = (uint16_t) parse_number(token);
+            goto skip_line;
+        }
         else
         {
             printf("ERROR: UNKNOWN DIRECTIVE\n");
@@ -155,10 +185,19 @@ int main(int argc, const char * argv[]) {
     // start assemble program
     // ********************************
     uint8_t program[65535];
-    int pc = 0;
+    
     int i;
+    for (i = 0; i < 65536; i++)
+    {
+        program[i] = 0;
+    }
+    
+    int pc = 0;
     for (i = 0; i < line_count; i++)
     {
+        // set pc
+        pc = lines[i].addr;
+        
         if (strcmp(lines[i].dir, "sble") == 0)
         {
             // a address
@@ -211,10 +250,13 @@ int main(int argc, const char * argv[]) {
         else if (strcmp(lines[i].dir, "db") == 0)
         {
             // parse constants
-            
-            uint8_t c = (uint8_t) strtol(lines[i].args[0], NULL, 10);
+            uint8_t c = (uint8_t) parse_number(lines[i].args[0]);
             program[pc] = c;
             pc++;
+        }
+        else if (strcmp(lines[i].dir, "org") == 0)
+        {
+            // do nothing here
         }
     }
     
